@@ -12,6 +12,9 @@ export interface CreatePayosPaymentInput {
 }
 
 export class PayosService {
+  /** The orderCode of the sample webhook PayOS sends when a webhook URL is confirmed. */
+  public static readonly SAMPLE_ORDER_CODE = 123
+
   private payosClient: PayOS | null = null
 
   private getPayosClient(): PayOS {
@@ -72,7 +75,7 @@ export class PayosService {
     }
   }
 
-  async verifyWebhook(body: Webhook): Promise<{ orderCode: number; amount: number }> {
+  async verifyWebhook(body: Webhook): Promise<{ orderCode: number; amount: number; description: string }> {
     const payos = this.getPayosClient()
     let webhookData
     try {
@@ -89,6 +92,7 @@ export class PayosService {
     return {
       orderCode: webhookData.orderCode,
       amount: webhookData.amount,
+      description: webhookData.description,
     }
   }
 

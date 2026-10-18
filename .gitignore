@@ -30,3 +30,4 @@ logs
 # Values to set as GitHub Actions secrets
 .env.cicd
 deploy.pem
+deploy

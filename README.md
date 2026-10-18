@@ -32,6 +32,8 @@ Node.js, TypeScript, Express, Supabase (Postgres), PayOS.
    | `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY` | Thông tin kênh thanh toán PayOS |
    | `PAYOS_RETURN_URL`, `PAYOS_CANCEL_URL` | Trang của app mà trình duyệt quay về sau khi thanh toán / huỷ |
    | `PAYOS_WEBHOOK_URL`, `PAYOS_CONFIRM_WEBHOOK` | URL public của webhook; `true` để đăng ký URL với PayOS khi khởi động |
+   | `GMAIL_USER`, `GMAIL_PASS` | Tài khoản Gmail gửi mail cảnh báo và App Password của nó (không phải mật khẩu đăng nhập) |
+   | `ALERT_MAIL_TO` | Email admin của gateway nhận cảnh báo, cách nhau dấu phẩy; thiếu một trong ba biến mail thì tắt cảnh báo |
    | `APPS` | Danh sách code của các app được gắn vào, cách nhau dấu phẩy |
    | `APP_<CODE>_*` | Profile của từng app, xem bên dưới |
 
@@ -79,3 +81,5 @@ npm run dev
 - Lỗi nghiệp vụ trả HTTP 200 với mã thật nằm ở `code` trong body; chỉ lỗi validate (400) và sai API key (401) trả
   đúng HTTP status.
 - Thanh toán chỉ được xác nhận qua webhook, nên `PAYOS_WEBHOOK_URL` phải gọi được từ internet.
+- Khi đã nhận tiền mà xử lý không đi hết (không thấy order, lệch số tiền, app không cấu hình, handler thất bại hoặc
+  crash), gateway gửi một mail cảnh báo tới `ALERT_MAIL_TO`. Webhook vẫn trả 200 trong các trường hợp này.

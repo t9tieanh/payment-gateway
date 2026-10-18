@@ -7,6 +7,7 @@ import { appRegistry } from './config/apps';
 import indexRoute from '~/routes';
 import Logger from './utils/logger';
 import payosService from './service/utils/payos.service';
+import { alertNotifierFactory } from './service/alert/impl/alert-notifier.factory';
 
 const app = express();
 
@@ -25,6 +26,13 @@ const PORT = env.PORT || 4000;
 async function bootstrap() {
   try {
     Logger.info(`Connected apps: ${appRegistry.all().map((profile) => `${profile.code} (${profile.handler})`).join(', ')}`);
+
+    for (const notifier of alertNotifierFactory.all()) {
+      if (notifier.isEnabled())
+        Logger.info(`Alert ${notifier.channel} enabled`);
+      else
+        Logger.warn(`Alert ${notifier.channel} disabled: missing configuration`);
+    }
 
     // Must listen before PayOS confirm — PayOS pings the webhook URL
     await new Promise<void>((resolve) => {

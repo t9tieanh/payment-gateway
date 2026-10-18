@@ -5,6 +5,12 @@ import orderRepository from '~/repositories/order.repository'
 import { Order } from '~/types/order'
 import Logger from '~/utils/logger'
 
+export interface HandlerOutcome {
+  status: HandlerStatus.Done | HandlerStatus.Failed
+  attempts: number
+  lastError: string | null
+}
+
 /** What a connected app wants done once one of its orders is paid. */
 export abstract class PaymentHandlerService {
   abstract readonly kind: PaymentHandlerKind
@@ -14,14 +20,17 @@ export abstract class PaymentHandlerService {
 
   protected abstract execute(order: Order, app: AppProfile): Promise<void>
 
-  async handle(order: Order, app: AppProfile): Promise<void> {
+  async handle(order: Order, app: AppProfile): Promise<HandlerOutcome> {
+    let lastError: string | null = null
+
     for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
       try {
         await this.execute(order, app)
         await orderRepository.saveHandlerResult(order.id, HandlerStatus.Done, attempt)
         Logger.info(`Payment handler ${this.kind} done (app=${app.code}, order=${order.id}, attempt=${attempt})`)
-        return
+        return { status: HandlerStatus.Done, attempts: attempt, lastError: null }
       } catch (err) {
+        lastError = String(err)
         Logger.warn(
           `Payment handler ${this.kind} failed (app=${app.code}, order=${order.id}, attempt=${attempt}/${this.maxAttempts}): ${err}`
         )
@@ -31,5 +40,6 @@ export abstract class PaymentHandlerService {
     }
 
     await orderRepository.saveHandlerResult(order.id, HandlerStatus.Failed, this.maxAttempts)
+    return { status: HandlerStatus.Failed, attempts: this.maxAttempts, lastError }
   }
 }
